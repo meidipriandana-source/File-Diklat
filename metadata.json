@@ -1,0 +1,6 @@
+{
+  "name": "Pendaftaran & Checklist Berkas RSUD Dr. H. Jusuf SK",
+  "description": "Aplikasi Pendaftaran & Checklist Berkas Syarat Kelengkapan Pelatihan RSUD dr. H. Jusuf SK terintegrasi Google Drive dan Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
