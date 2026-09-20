@@ -13,8 +13,7 @@ import { NewActivityModal } from './components/NewActivityModal';
 import { ActivityManagerModal } from './components/ActivityManagerModal';
 import { LoginModal } from './components/LoginModal';
 import { ShareModal } from './components/ShareModal';
-import { DEFAULT_TRAINING_INFO, INITIAL_CHECKLIST_ITEMS } from './data/initialChecklist';
-import { INITIAL_ACTIVITIES } from './data/initialActivities';
+import { DEFAULT_TRAINING_INFO, INITIAL_CHECKLIST_ITEMS, INITIAL_ACTIVITIES } from './data/initialChecklist';
 import {
   TrainingInfo,
   ChecklistItem,
