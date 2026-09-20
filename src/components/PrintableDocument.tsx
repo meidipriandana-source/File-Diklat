@@ -19,19 +19,29 @@ export const PrintableDocument: React.FC<PrintableDocumentProps> = ({
   return (
     <div className="hidden print:block text-black bg-white p-8 max-w-4xl mx-auto font-serif">
       {/* Official Hospital Header / Kop Surat */}
-      <div className="border-b-4 border-double border-black pb-3 mb-6 text-center">
-        <h3 className="text-sm font-bold uppercase tracking-wider">
-          PEMERINTAH PROVINSI KALIMANTAN UTARA
-        </h3>
-        <h3 className="text-sm font-bold uppercase tracking-wider">
-          DINAS KESEHATAN
-        </h3>
-        <h2 className="text-lg font-extrabold uppercase tracking-wide mt-1">
-          RUMAH SAKIT UMUM DAERAH DR. H. JUSUF SK
-        </h2>
-        <p className="text-[11px] text-gray-700 italic">
-          Jl. Pulau Irian No. 1, Kota Tarakan, Kalimantan Utara | Telp: (0551) 21166
-        </p>
+      <div className="border-b-4 border-double border-black pb-3 mb-6 flex items-center justify-between gap-4">
+        <div className="w-18 h-22 flex items-center justify-center shrink-0">
+          <img
+            src="/logo-kaltara.svg"
+            alt="Logo Kalimantan Utara"
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
+        <div className="flex-1 text-center">
+          <h3 className="text-sm font-bold uppercase tracking-wider">
+            PEMERINTAH PROVINSI KALIMANTAN UTARA
+          </h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider">
+            DINAS KESEHATAN
+          </h3>
+          <h2 className="text-lg font-extrabold uppercase tracking-wide mt-0.5">
+            RUMAH SAKIT UMUM DAERAH DR. H. JUSUF SK
+          </h2>
+          <p className="text-[11px] text-gray-700 italic mt-0.5">
+            Jl. Pulau Irian No. 1, Kota Tarakan, Kalimantan Utara | Telp: (0551) 21166
+          </p>
+        </div>
+        <div className="w-18 h-22 shrink-0 hidden sm:block"></div>
       </div>
 
       {/* Document Title */}

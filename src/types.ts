@@ -63,7 +63,7 @@ export interface DriveSyncItem {
 export interface SyncHistoryItem {
   id: string;
   timestamp: string;
-  target: 'Drive & Sheets' | 'Google Drive' | 'Google Sheets';
+  target: 'Drive & Sheets' | 'Google Drive' | 'Google Sheets' | 'Basis Data RSUD' | 'Arsip Sistem RSUD';
   tabTitle: string;
   fileName?: string;
   userEmail?: string;

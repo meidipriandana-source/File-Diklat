@@ -10,8 +10,11 @@ import {
   Plane,
   Utensils,
   Wallet,
+  HardDrive,
+  ExternalLink,
 } from 'lucide-react';
 import { TabType } from '../types';
+import { GOOGLE_DRIVE_FOLDER_ID } from '../lib/googleDrive';
 
 interface HospitalHeaderProps {
   activeTab: TabType;
@@ -46,19 +49,22 @@ export const HospitalHeader: React.FC<HospitalHeaderProps> = ({
           <Activity className="w-48 h-48 text-white" />
         </div>
 
-        {/* Medical Emblem */}
+        {/* Official Logo Kalimantan Utara (Benuanta) */}
         <div className="mx-auto mb-3 flex items-center justify-center">
-          <div className="w-14 h-14 rounded-full bg-white/15 border-2 border-emerald-300 flex items-center justify-center shadow-inner">
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#00796B] shadow-sm">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
-                <path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z" />
-              </svg>
-            </div>
+          <div className="w-16 h-20 sm:w-20 sm:h-24 p-1.5 rounded-xl bg-white shadow-lg border-2 border-white/80 flex items-center justify-center transition-transform hover:scale-105">
+            <img
+              src="/logo-kaltara.svg"
+              alt="Logo Kalimantan Utara - Benuanta"
+              className="w-full h-full object-contain filter drop-shadow-xs"
+            />
           </div>
         </div>
 
         {/* Title */}
-        <h1 className="text-xl sm:text-2xl font-bold tracking-wide uppercase drop-shadow-xs">
+        <p className="text-[11px] sm:text-xs font-semibold tracking-widest text-emerald-200 uppercase">
+          PEMERINTAH PROVINSI KALIMANTAN UTARA
+        </p>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-wide uppercase drop-shadow-xs mt-0.5">
           RSUD DR. H. JUSUF SK
         </h1>
         <p className="text-xs sm:text-sm font-semibold tracking-wider text-emerald-100 uppercase mt-1">
@@ -95,6 +101,19 @@ export const HospitalHeader: React.FC<HospitalHeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2 justify-end flex-wrap">
+          {/* Quick Google Drive Folder Access */}
+          <a
+            href={`https://drive.google.com/drive/folders/${GOOGLE_DRIVE_FOLDER_ID}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50/80 hover:bg-blue-100 border border-blue-200 rounded-md transition-all cursor-pointer shadow-2xs hover:border-blue-300"
+            title={`Buka Folder Google Drive Resmi: ${GOOGLE_DRIVE_FOLDER_ID}`}
+          >
+            <HardDrive className="w-3.5 h-3.5 text-blue-600" />
+            <span>Folder Google Drive</span>
+            <ExternalLink className="w-3 h-3 text-blue-400" />
+          </a>
+
           <button
             onClick={onBackup}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors cursor-pointer shadow-2xs hover:border-slate-400"
