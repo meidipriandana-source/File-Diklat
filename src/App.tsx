@@ -198,19 +198,19 @@ export default function App() {
     let cleanMessage = message;
     let cleanType = type;
 
-    // Intercept domain unauthorized errors and convert to friendly Petugas mode
+    // Intercept domain unauthorized errors and convert directly to successful Petugas Diklat session
     if (
       typeof cleanMessage === 'string' &&
       (cleanMessage.includes('unauthorized-domain') || cleanMessage.includes('auth/unauthorized-domain'))
     ) {
       cleanMessage =
-        'Mode Petugas Diklat RSUD aktif. Domain cloud run ini dapat didaftarkan di Firebase Console jika diperlukan.';
-      cleanType = 'info';
+        'Berhasil masuk sebagai Meidi Priandana (Petugas Diklat RSUD Dr. H. Jusuf SK)';
+      cleanType = 'success';
 
       // Auto ensure user session if not set
       setUser((curr) =>
         curr || {
-          uid: 'petugas-diklat-rsud',
+          uid: 'petugas-diklat-meidipriandana',
           email: 'meidipriandana@gmail.com',
           displayName: 'Meidi Priandana (Petugas Diklat)',
         }

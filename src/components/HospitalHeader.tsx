@@ -50,14 +50,18 @@ export const HospitalHeader: React.FC<HospitalHeaderProps> = ({
         </div>
 
         {/* Official Logo Kalimantan Utara (Benuanta) */}
-        <div className="mx-auto mb-3 flex items-center justify-center">
-          <div className="w-16 h-20 sm:w-20 sm:h-24 p-1.5 rounded-xl bg-white shadow-lg border-2 border-white/80 flex items-center justify-center transition-transform hover:scale-105">
+        <div className="mx-auto mb-3 flex flex-col items-center justify-center">
+          <div className="w-18 h-22 sm:w-22 sm:h-28 p-2 rounded-2xl bg-white shadow-xl border-2 border-white/90 flex items-center justify-center transition-transform hover:scale-105">
             <img
               src="/logo-kaltara.svg"
-              alt="Logo Kalimantan Utara - Benuanta"
-              className="w-full h-full object-contain filter drop-shadow-xs"
+              alt="Lambang Daerah Provinsi Kalimantan Utara (Benuanta)"
+              className="w-full h-full object-contain"
+              loading="eager"
             />
           </div>
+          <span className="mt-1.5 text-[10px] sm:text-[11px] font-bold text-emerald-100 uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full backdrop-blur-xs">
+            Provinsi Kalimantan Utara
+          </span>
         </div>
 
         {/* Title */}
