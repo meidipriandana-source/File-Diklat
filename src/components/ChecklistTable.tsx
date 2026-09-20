@@ -37,7 +37,7 @@ interface ChecklistTableProps {
   activitiesCount?: number;
   uploadedFiles?: UploadedFile[];
   onDirectUploadFile?: (item: ChecklistItem, file: File) => Promise<void>;
-  onDirectDeleteFile?: (fileId: string) => Promise<void>;
+  onDirectDeleteFile?: (fileId: string, item?: ChecklistItem) => Promise<void>;
   onUploadForItem?: (item: ChecklistItem) => void;
 }
 
@@ -141,16 +141,20 @@ export const ChecklistTable: React.FC<ChecklistTableProps> = ({
 
   // Delete/unlink attached file
   const handleDeleteAttachedFile = async (e: React.MouseEvent, item: ChecklistItem) => {
+    e.preventDefault();
     e.stopPropagation();
     if (!onDirectDeleteFile) return;
 
-    if (item.attachedFileId) {
-      await onDirectDeleteFile(item.attachedFileId);
-    } else {
-      const file = uploadedFiles.find((f) => f.name === item.attachedFileName);
-      if (file) {
-        await onDirectDeleteFile(file.id);
-      }
+    const fileId =
+      item.attachedFileId ||
+      uploadedFiles.find((f) => f.name === item.attachedFileName)?.id ||
+      item.attachedFileName ||
+      String(item.id);
+
+    try {
+      await onDirectDeleteFile(fileId, item);
+    } catch (err) {
+      console.error('Error deleting attached file:', err);
     }
   };
 
@@ -508,23 +512,25 @@ export const ChecklistTable: React.FC<ChecklistTableProps> = ({
                                 <span className="truncate">{item.attachedFileName}</span>
                               </button>
 
-                              <div className="flex items-center gap-0.5 ml-1 border-l border-emerald-300 pl-1">
+                              <div className="flex items-center gap-1 ml-1.5 border-l border-emerald-300 pl-1">
                                 <button
                                   type="button"
                                   onClick={(e) => handleDirectFileClick(e, item)}
-                                  className="p-0.5 text-emerald-700 hover:text-emerald-950 rounded hover:bg-emerald-200 transition-colors cursor-pointer"
+                                  className="p-1 text-emerald-700 hover:text-emerald-950 rounded-sm hover:bg-emerald-200/80 transition-colors cursor-pointer flex items-center justify-center"
                                   title="Ganti berkas ini (unggah berkas baru)"
+                                  aria-label="Ganti berkas"
                                 >
-                                  <RefreshCw className="w-2.5 h-2.5" />
+                                  <RefreshCw className="w-3 h-3" />
                                 </button>
                                 {onDirectDeleteFile && (
                                   <button
                                     type="button"
                                     onClick={(e) => handleDeleteAttachedFile(e, item)}
-                                    className="p-0.5 text-rose-500 hover:text-rose-700 rounded hover:bg-rose-100 transition-colors cursor-pointer"
-                                    title="Hapus lampiran berkas"
+                                    className="p-1 text-rose-500 hover:text-white hover:bg-rose-600 rounded-sm transition-all cursor-pointer flex items-center justify-center"
+                                    title="Hapus lampiran berkas ini"
+                                    aria-label={`Hapus berkas ${item.attachedFileName}`}
                                   >
-                                    <X className="w-2.5 h-2.5" />
+                                    <X className="w-3.5 h-3.5" />
                                   </button>
                                 )}
                               </div>

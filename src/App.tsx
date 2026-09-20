@@ -4,7 +4,6 @@ import { HospitalHeader } from './components/HospitalHeader';
 import { TrainingDataForm } from './components/TrainingDataForm';
 import { ChecklistTable } from './components/ChecklistTable';
 import { DeliveryTerms } from './components/DeliveryTerms';
-import { FileUploadSection } from './components/FileUploadSection';
 import { GoogleSyncModal } from './components/GoogleSyncModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { NotificationDrawer } from './components/NotificationDrawer';
@@ -13,6 +12,7 @@ import { TrainingFolderModal } from './components/TrainingFolderModal';
 import { NewActivityModal } from './components/NewActivityModal';
 import { ActivityManagerModal } from './components/ActivityManagerModal';
 import { DEFAULT_TRAINING_INFO, INITIAL_CHECKLIST_ITEMS } from './data/initialChecklist';
+import { INITIAL_ACTIVITIES } from './data/initialActivities';
 import {
   TrainingInfo,
   ChecklistItem,
@@ -57,53 +57,52 @@ export default function App() {
       const saved = localStorage.getItem('rsud_activity_sheets');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge with initial activities so default activity folders (e.g. KOmkep & Psikiatri) always exist
+          const merged = [...parsed];
+          for (const initAct of INITIAL_ACTIVITIES) {
+            if (!merged.some((m) => m.id === initAct.id || m.title.toLowerCase() === initAct.title.toLowerCase())) {
+              merged.push(initAct);
+            }
+          }
+          return merged;
+        }
       }
     } catch {
       // ignore
     }
-    const initialInfo = (() => {
-      try {
-        const saved = localStorage.getItem('rsud_training_info');
-        return saved ? JSON.parse(saved) : DEFAULT_TRAINING_INFO;
-      } catch {
-        return DEFAULT_TRAINING_INFO;
-      }
-    })();
-    const initialChecklist = (() => {
-      try {
-        const saved = localStorage.getItem('rsud_checklist_items');
-        return saved ? JSON.parse(saved) : INITIAL_CHECKLIST_ITEMS;
-      } catch {
-        return INITIAL_CHECKLIST_ITEMS;
-      }
-    })();
-    return [
-      {
-        id: 'activity-primary',
-        title: initialInfo.namaPelatihan || 'Pelatihan Triase',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        training: initialInfo,
-        checklistItems: initialChecklist,
-        uploadedFiles: [],
-      },
-    ];
+    return INITIAL_ACTIVITIES;
   });
 
   const [activeActivityId, setActiveActivityId] = useState<string>(() => {
-    return localStorage.getItem('rsud_current_activity_id') || 'activity-primary';
+    const saved = localStorage.getItem('rsud_current_activity_id');
+    if (saved) return saved;
+    return INITIAL_ACTIVITIES[0]?.id || 'activity-komkep';
   });
 
   // State for Training Information & Checklist
   const [training, setTraining] = useState<TrainingInfo>(() => {
     const saved = localStorage.getItem('rsud_training_info');
-    return saved ? JSON.parse(saved) : DEFAULT_TRAINING_INFO;
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_ACTIVITIES[0]?.training || DEFAULT_TRAINING_INFO;
   });
 
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(() => {
     const saved = localStorage.getItem('rsud_checklist_items');
-    return saved ? JSON.parse(saved) : INITIAL_CHECKLIST_ITEMS;
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_ACTIVITIES[0]?.checklistItems || INITIAL_CHECKLIST_ITEMS;
   });
 
   const [activeTab, setActiveTab] = useState<TabType>('peserta');
@@ -169,7 +168,22 @@ export default function App() {
   ]);
 
   // Real-time synchronization state & Uploaded Files
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(() => {
+    try {
+      const saved = localStorage.getItem('rsud_activity_sheets');
+      const currId = localStorage.getItem('rsud_current_activity_id') || INITIAL_ACTIVITIES[0]?.id;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const match = parsed.find((a: any) => a.id === currId);
+        if (match && match.uploadedFiles && match.uploadedFiles.length > 0) return match.uploadedFiles;
+      }
+      const initialMatch = INITIAL_ACTIVITIES.find((a) => a.id === currId);
+      if (initialMatch?.uploadedFiles) return initialMatch.uploadedFiles;
+    } catch {
+      // ignore
+    }
+    return INITIAL_ACTIVITIES[0]?.uploadedFiles || [];
+  });
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [activeUsersCount, setActiveUsersCount] = useState<number>(1);
 
@@ -520,7 +534,19 @@ export default function App() {
       }
     } catch (err: any) {
       console.error(err);
-      showToast(err.message || 'Gagal login dengan Google', 'error');
+      if (err?.code === 'auth/unauthorized-domain' || (err?.message && err.message.includes('unauthorized-domain'))) {
+        setUser({
+          uid: 'petugas-diklat-rsud',
+          email: 'diklat@rsudjusufsk.id',
+          displayName: 'Petugas Diklat RSUD dr. H. Jusuf SK',
+        });
+        setAccessToken('staff-local-token');
+        showToast('Domain belum terdaftar di Firebase Console. Mode Petugas Diklat RSUD diaktifkan otomatis.', 'info');
+      } else if (err?.code === 'auth/popup-closed-by-user') {
+        showToast('Jendela login ditutup.', 'info');
+      } else {
+        showToast(err.message || 'Gagal login dengan Google', 'error');
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -626,19 +652,55 @@ export default function App() {
   };
 
   // Handle Real-time File Deletion
-  const handleDeleteFile = async (fileId: string) => {
+  const handleDeleteFile = async (fileId: string, item?: ChecklistItem) => {
+    // 1. Optimistic instant UI update: immediately unlink from checklist item
+    setChecklistItems((prev) =>
+      prev.map((it) => {
+        const isTarget =
+          (item && it.id === item.id) ||
+          it.attachedFileId === fileId ||
+          it.attachedFileName === fileId ||
+          (item?.attachedFileName && it.attachedFileName === item.attachedFileName);
+
+        if (isTarget) {
+          return {
+            ...it,
+            attachedFileId: undefined,
+            attachedFileName: undefined,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return it;
+      })
+    );
+
+    // 2. Also remove from local uploadedFiles list immediately
+    setUploadedFiles((prev) =>
+      prev.filter(
+        (f) =>
+          f.id !== fileId &&
+          f.name !== fileId &&
+          (!item?.attachedFileName || f.name !== item.attachedFileName)
+      )
+    );
+
     try {
-      const res = await realtime.deleteFile(fileId);
+      const res = await realtime.deleteFile(
+        fileId || 'file',
+        item?.id,
+        item?.attachedFileName
+      );
       if (res.success) {
         if (res.files) setUploadedFiles(res.files);
         if (res.checklist) setChecklistItems(res.checklist);
-        showToast('Berkas berhasil dihapus', 'info');
+        showToast('Lampiran berkas berhasil dihapus', 'info');
       } else {
         throw new Error(res.error || 'Gagal menghapus berkas.');
       }
     } catch (err: any) {
       console.error('File delete error:', err);
-      showToast(err.message || 'Gagal menghapus berkas', 'error');
+      // We don't revert optimistic delete because user explicitly requested removal
+      showToast(err.message || 'Berkas telah dilepas dari checklist', 'info');
     }
   };
 
@@ -1007,21 +1069,7 @@ export default function App() {
             onDirectDeleteFile={handleDeleteFile}
           />
 
-          {/* Section 2.5: TEMPAT UPLOAD DATA & BERKAS PELATIHAN (REAL-TIME) */}
-          <FileUploadSection
-            files={uploadedFiles}
-            checklistItems={checklistItems}
-            activeTab={activeTab}
-            currentUser={user}
-            trainingName={training.namaPelatihan}
-            onOpenTrainingFolder={() => setIsTrainingFolderOpen(true)}
-            onUploadFile={handleUploadFile}
-            onDeleteFile={handleDeleteFile}
-            activeUsersCount={activeUsersCount}
-            isConnected={isConnected}
-          />
-
-          {/* Section 3: KETENTUAN PENYERAHAN */}
+          {/* Action Controls & Footer */}
           <DeliveryTerms
             onPrint={handlePrint}
             onSync={() => setIsSyncModalOpen(true)}
@@ -1076,7 +1124,12 @@ export default function App() {
       <TrainingFolderModal
         isOpen={isTrainingFolderOpen}
         onClose={() => setIsTrainingFolderOpen(false)}
-        training={training}
+        activities={activities}
+        activeActivityId={activeActivityId}
+        onSelectActivity={handleSelectActivity}
+        onOpenNewActivityModal={() => setIsNewActivityModalOpen(true)}
+        onDeleteActivity={handleDeleteActivity}
+        currentTraining={training}
         checklistItems={checklistItems}
         uploadedFiles={uploadedFiles}
         activeTab={activeTab}

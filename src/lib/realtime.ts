@@ -244,8 +244,13 @@ class RealtimeService {
     return await res.json();
   }
 
-  public async deleteFile(fileId: string) {
-    const res = await fetch(`/api/files/${fileId}`, {
+  public async deleteFile(fileId: string, itemId?: number, fileName?: string) {
+    const params = new URLSearchParams();
+    if (itemId !== undefined) params.append('itemId', String(itemId));
+    if (fileName) params.append('fileName', fileName);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const res = await fetch(`/api/files/${encodeURIComponent(fileId)}${queryString}`, {
       method: 'DELETE',
     });
     return await res.json();

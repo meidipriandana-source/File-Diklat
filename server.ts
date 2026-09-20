@@ -431,20 +431,29 @@ app.post('/api/upload', (req, res) => {
 app.delete('/api/files/:fileId', (req, res) => {
   try {
     const { fileId } = req.params;
+    const { itemId, fileName } = req.query as { itemId?: string; fileName?: string };
     const db = readDB();
 
-    db.sharedFiles = (db.sharedFiles || []).filter((f: any) => f.id !== fileId);
+    db.sharedFiles = (db.sharedFiles || []).filter(
+      (f: any) => f.id !== fileId && f.name !== fileId && (!fileName || f.name !== fileName)
+    );
 
     // Unlink from checklist items
-    db.sharedChecklist = db.sharedChecklist.map((item: any) =>
-      item.attachedFileId === fileId
-        ? {
-            ...item,
-            attachedFileId: undefined,
-            attachedFileName: undefined,
-          }
-        : item
-    );
+    db.sharedChecklist = (db.sharedChecklist || []).map((item: any) => {
+      const matchFileId = item.attachedFileId === fileId;
+      const matchFileName = item.attachedFileName === fileId || (fileName && item.attachedFileName === fileName);
+      const matchItem = itemId && Number(item.id) === Number(itemId);
+
+      if (matchFileId || matchFileName || matchItem) {
+        return {
+          ...item,
+          attachedFileId: undefined,
+          attachedFileName: undefined,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      return item;
+    });
 
     writeDB(db);
 
@@ -457,7 +466,7 @@ app.delete('/api/files/:fileId', (req, res) => {
       },
     });
 
-    return res.json({ success: true, files: db.sharedFiles });
+    return res.json({ success: true, files: db.sharedFiles, checklist: db.sharedChecklist });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }
