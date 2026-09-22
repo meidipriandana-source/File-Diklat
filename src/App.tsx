@@ -54,58 +54,14 @@ import {
 
 export default function App() {
   // Multi-Activity / Lembaran Kegiatan Management
-  const [activities, setActivities] = useState<ActivitySheet[]>(() => {
-    try {
-      const saved = localStorage.getItem('rsud_activity_sheets');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge with initial activities so default activity folders (e.g. KOmkep & Psikiatri) always exist
-          const merged = [...parsed];
-          for (const initAct of INITIAL_ACTIVITIES) {
-            if (!merged.some((m) => m.id === initAct.id || m.title.toLowerCase() === initAct.title.toLowerCase())) {
-              merged.push(initAct);
-            }
-          }
-          return merged;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return INITIAL_ACTIVITIES;
-  });
+  const [activities, setActivities] = useState<ActivitySheet[]>(INITIAL_ACTIVITIES);
 
-  const [activeActivityId, setActiveActivityId] = useState<string>(() => {
-    const saved = localStorage.getItem('rsud_current_activity_id');
-    if (saved) return saved;
-    return INITIAL_ACTIVITIES[0]?.id || 'activity-komkep';
-  });
+  const [activeActivityId, setActiveActivityId] = useState<string>(INITIAL_ACTIVITIES[0]?.id || 'activity-komkep');
 
   // State for Training Information & Checklist
-  const [training, setTraining] = useState<TrainingInfo>(() => {
-    const saved = localStorage.getItem('rsud_training_info');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // fallback
-      }
-    }
-    return INITIAL_ACTIVITIES[0]?.training || DEFAULT_TRAINING_INFO;
-  });
+  const [training, setTraining] = useState<TrainingInfo>(INITIAL_ACTIVITIES[0]?.training || DEFAULT_TRAINING_INFO);
 
-  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(() => {
-    const saved = localStorage.getItem('rsud_checklist_items');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // fallback
-      }
-    }
-    return INITIAL_ACTIVITIES[0]?.checklistItems || INITIAL_CHECKLIST_ITEMS;
-  });
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(INITIAL_ACTIVITIES[0]?.checklistItems || INITIAL_CHECKLIST_ITEMS);
 
   const [activeTab, setActiveTab] = useState<TabType>('peserta');
 
@@ -127,37 +83,26 @@ export default function App() {
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
-  const [syncHistory, setSyncHistory] = useState<SyncHistoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('rsud_sync_history');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch {
-      // ignore
-    }
-    // Default initial mock history showing RSUD system integration
-    return [
-      {
-        id: 'sync-init-1',
-        timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-        target: 'Drive & Sheets',
-        tabTitle: 'Checklist Peserta Pelatihan',
-        userEmail: 'diklat@rsudjusufsk.id',
-        status: 'success',
-        details: '18 berkas persyaratan terverifikasi',
-      },
-      {
-        id: 'sync-init-2',
-        timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
-        target: 'Drive & Sheets',
-        tabTitle: 'Perjalanan Dinas Narasumber',
-        userEmail: 'diklat@rsudjusufsk.id',
-        status: 'success',
-        details: '8 berkas perjalanan dinas disinkronkan',
-      },
-    ];
-  });
+  const [syncHistory, setSyncHistory] = useState<SyncHistoryItem[]>([
+    {
+      id: 'sync-init-1',
+      timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+      target: 'Drive & Sheets',
+      tabTitle: 'Checklist Peserta Pelatihan',
+      userEmail: 'diklat@rsudjusufsk.id',
+      status: 'success',
+      details: '18 berkas persyaratan terverifikasi',
+    },
+    {
+      id: 'sync-init-2',
+      timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+      target: 'Drive & Sheets',
+      tabTitle: 'Perjalanan Dinas Narasumber',
+      userEmail: 'diklat@rsudjusufsk.id',
+      status: 'success',
+      details: '8 berkas perjalanan dinas disinkronkan',
+    },
+  ]);
 
   // Real-time notifications
   const [notifications, setNotifications] = useState<NotificationItem[]>([
@@ -172,22 +117,7 @@ export default function App() {
   ]);
 
   // Real-time synchronization state & Uploaded Files
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(() => {
-    try {
-      const saved = localStorage.getItem('rsud_activity_sheets');
-      const currId = localStorage.getItem('rsud_current_activity_id') || INITIAL_ACTIVITIES[0]?.id;
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const match = parsed.find((a: any) => a.id === currId);
-        if (match && match.uploadedFiles && match.uploadedFiles.length > 0) return match.uploadedFiles;
-      }
-      const initialMatch = INITIAL_ACTIVITIES.find((a) => a.id === currId);
-      if (initialMatch?.uploadedFiles) return initialMatch.uploadedFiles;
-    } catch {
-      // ignore
-    }
-    return INITIAL_ACTIVITIES[0]?.uploadedFiles || [];
-  });
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(INITIAL_ACTIVITIES[0]?.uploadedFiles || []);
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [activeUsersCount, setActiveUsersCount] = useState<number>(1);
 
@@ -342,19 +272,6 @@ export default function App() {
     };
   }, []);
 
-  // Local storage persistence & Activity synchronization
-  useEffect(() => {
-    localStorage.setItem('rsud_training_info', JSON.stringify(training));
-  }, [training]);
-
-  useEffect(() => {
-    localStorage.setItem('rsud_checklist_items', JSON.stringify(checklistItems));
-  }, [checklistItems]);
-
-  useEffect(() => {
-    localStorage.setItem('rsud_sync_history', JSON.stringify(syncHistory));
-  }, [syncHistory]);
-
   // Keep active activity in sync with activities list
   useEffect(() => {
     setActivities((prev) => {
@@ -374,12 +291,6 @@ export default function App() {
         next = prev.map((a) => (a.id === activeActivityId ? updatedSheet : a));
       } else {
         next = [updatedSheet, ...prev];
-      }
-      try {
-        localStorage.setItem('rsud_activity_sheets', JSON.stringify(next));
-        localStorage.setItem('rsud_current_activity_id', activeActivityId);
-      } catch {
-        // ignore storage quota errors
       }
       return next;
     });
@@ -407,28 +318,16 @@ export default function App() {
       uploadedFiles: [],
     };
 
-    setActivities((prev) => {
-      const updated = [newSheet, ...prev];
-      try {
-        localStorage.setItem('rsud_activity_sheets', JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
-      return updated;
-    });
+    setActivities((prev) => [newSheet, ...prev]);
 
     setActiveActivityId(newId);
     setTraining(newTraining);
     setChecklistItems(cleanChecklist);
     setUploadedFiles([]);
 
-    localStorage.setItem('rsud_current_activity_id', newId);
-    localStorage.setItem('rsud_training_info', JSON.stringify(newTraining));
-    localStorage.setItem('rsud_checklist_items', JSON.stringify(cleanChecklist));
-
     realtime.updateTraining(newTraining, user?.displayName || 'Staf RSUD');
     showToast(
-      `Lembaran baru "${newTraining.namaPelatihan}" berhasil dibuka! Kegiatan sebelumnya aman tersimpan di arsip.`,
+      `Lembaran baru "${newTraining.namaPelatihan}" berhasil dibuka! Kegiatan sebelumnya aman tersimpan di cloud.`,
       'success'
     );
   };
@@ -441,10 +340,6 @@ export default function App() {
     setTraining(target.training);
     setChecklistItems(target.checklistItems);
     setUploadedFiles(target.uploadedFiles || []);
-
-    localStorage.setItem('rsud_current_activity_id', target.id);
-    localStorage.setItem('rsud_training_info', JSON.stringify(target.training));
-    localStorage.setItem('rsud_checklist_items', JSON.stringify(target.checklistItems));
 
     realtime.updateTraining(target.training, user?.displayName || 'Staf RSUD');
     showToast(`Beralih ke kegiatan: "${target.training.namaPelatihan}"`, 'info');
@@ -470,16 +365,7 @@ export default function App() {
       uploadedFiles: JSON.parse(JSON.stringify(target.uploadedFiles || [])),
     };
 
-    setActivities((prev) => {
-      const updated = [duplicatedSheet, ...prev];
-      try {
-        localStorage.setItem('rsud_activity_sheets', JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
-      return updated;
-    });
-
+    setActivities((prev) => [duplicatedSheet, ...prev]);
     showToast(`Lembaran "${target.training.namaPelatihan}" berhasil diduplikasi!`, 'success');
   };
 
@@ -491,11 +377,6 @@ export default function App() {
 
     setActivities((prev) => {
       const next = prev.filter((a) => a.id !== activityId);
-      try {
-        localStorage.setItem('rsud_activity_sheets', JSON.stringify(next));
-      } catch {
-        // ignore
-      }
 
       if (activeActivityId === activityId && next.length > 0) {
         const fallback = next[0];
@@ -503,9 +384,6 @@ export default function App() {
         setTraining(fallback.training);
         setChecklistItems(fallback.checklistItems);
         setUploadedFiles(fallback.uploadedFiles || []);
-        localStorage.setItem('rsud_current_activity_id', fallback.id);
-        localStorage.setItem('rsud_training_info', JSON.stringify(fallback.training));
-        localStorage.setItem('rsud_checklist_items', JSON.stringify(fallback.checklistItems));
         realtime.updateTraining(fallback.training, user?.displayName || 'Staf RSUD');
       }
       return next;

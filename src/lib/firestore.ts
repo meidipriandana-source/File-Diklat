@@ -25,8 +25,20 @@ export async function saveAppStateToCloud(state: {
 }) {
   try {
     const docRef = doc(db, 'app_states', STATE_DOC_ID);
+    // Sanitize activities to avoid exceeding Firestore 1MB limit with huge dataUrls
+    const lightweightActivities = (state.activities || []).map((a) => ({
+      ...a,
+      uploadedFiles: (a.uploadedFiles || []).map((f) => ({
+        ...f,
+        dataUrl: f.dataUrl && f.dataUrl.length < 150000 ? f.dataUrl : undefined,
+      })),
+    }));
+
     await setDoc(docRef, {
-      ...state,
+      activities: lightweightActivities,
+      activeActivityId: state.activeActivityId,
+      training: state.training,
+      checklistItems: state.checklistItems,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
     return true;
