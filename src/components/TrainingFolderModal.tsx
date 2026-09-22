@@ -46,6 +46,12 @@ interface TrainingFolderModalProps {
   activeTab: TabType;
   onSelectTab?: (tab: TabType) => void;
   onPrintDossier?: () => void;
+  activities?: any[];
+  activeActivityId?: string;
+  onSelectActivity?: (id: string) => void;
+  onOpenNewActivityModal?: () => void;
+  onDeleteActivity?: (id: string) => void;
+  currentTraining?: TrainingInfo;
 }
 
 const CATEGORY_NAMES: Record<TabType, { label: string; folderName: string }> = {
@@ -89,6 +95,12 @@ export const TrainingFolderModal: React.FC<TrainingFolderModalProps> = ({
   activeTab,
   onSelectTab,
   onPrintDossier,
+  activities,
+  activeActivityId,
+  onSelectActivity,
+  onOpenNewActivityModal,
+  onDeleteActivity,
+  currentTraining,
 }) => {
   const [selectedSubfolder, setSelectedSubfolder] = useState<TabType | 'all'>('all');
   const [viewStyle, setViewStyle] = useState<'grid' | 'list'>('grid');

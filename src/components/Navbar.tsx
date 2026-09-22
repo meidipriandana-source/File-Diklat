@@ -61,26 +61,27 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Left: Brand info - protected from shrinking/wrapping collisions */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200/80 shadow-xs p-1 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 sm:gap-3.5 shrink-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-slate-200/80 shadow-xs p-1 flex items-center justify-center shrink-0">
             <img
               src="/logo-kaltara.svg"
               alt="Logo Kalimantan Utara"
               className="w-full h-full object-contain"
+              loading="eager"
             />
           </div>
           <div className="shrink-0">
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="font-bold text-slate-800 text-sm sm:text-base leading-tight">
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <span className="font-extrabold text-slate-800 text-base sm:text-lg leading-tight">
                 RSUD Dr. H. Jusuf SK
               </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200">
                 Tahun 2026
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 hidden sm:block leading-tight mt-0.5">
+            <p className="text-xs text-slate-500 hidden sm:block leading-tight mt-0.5">
               Provinsi Kalimantan Utara
             </p>
           </div>

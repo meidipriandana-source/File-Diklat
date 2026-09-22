@@ -25,6 +25,7 @@ import {
   ActivitySheet,
 } from './types';
 import { realtime } from './lib/realtime';
+import { subscribeToAppState, saveAppStateToCloud, loadAppStateFromCloud } from './lib/firestore';
 import {
   initAuth,
   googleSignIn,
@@ -222,6 +223,56 @@ export default function App() {
       setToast(null);
     }, 4500);
   };
+
+  // Firebase Firestore Real-time Cloud Sync & Persistence
+  useEffect(() => {
+    loadAppStateFromCloud().then((cloudState) => {
+      if (cloudState) {
+        if (cloudState.activities && cloudState.activities.length > 0) {
+          setActivities(cloudState.activities);
+        }
+        if (cloudState.activeActivityId) {
+          setActiveActivityId(cloudState.activeActivityId);
+        }
+        if (cloudState.training) {
+          setTraining(cloudState.training);
+        }
+        if (cloudState.checklistItems) {
+          setChecklistItems(cloudState.checklistItems);
+        }
+      }
+    });
+
+    const unsubscribeCloud = subscribeToAppState((cloudState) => {
+      if (cloudState) {
+        if (cloudState.activities && cloudState.activities.length > 0) {
+          setActivities(cloudState.activities);
+        }
+        if (cloudState.activeActivityId) {
+          setActiveActivityId(cloudState.activeActivityId);
+        }
+        if (cloudState.training) {
+          setTraining(cloudState.training);
+        }
+        if (cloudState.checklistItems) {
+          setChecklistItems(cloudState.checklistItems);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribeCloud();
+    };
+  }, []);
+
+  useEffect(() => {
+    saveAppStateToCloud({
+      activities,
+      activeActivityId,
+      training,
+      checklistItems,
+    });
+  }, [activities, activeActivityId, training, checklistItems]);
 
   // Real-time subscription to WebSocket/SSE events
   useEffect(() => {
@@ -1087,7 +1138,7 @@ export default function App() {
       </div>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 lg:py-8 print:hidden">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 print:hidden">
         {/* Toast Alert Banner */}
         {toast && (
           <div
@@ -1119,42 +1170,42 @@ export default function App() {
         )}
 
         {/* LEMBARAN AKTIF TOOLBAR & QUICK SWITCHER */}
-        <div className="mb-3.5 bg-white border border-slate-200 rounded-xl p-3 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex h-2.5 w-2.5 relative shrink-0">
+        <div className="mb-5 bg-white border border-slate-200/90 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex h-3 w-3 relative shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200">
                   📁 LEMBARAN AKTIF
                 </span>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
+                <span className="text-sm sm:text-base font-extrabold text-slate-900 truncate max-w-sm sm:max-w-xl">
                   {training.namaPelatihan || 'Pelatihan Baru'}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
+          <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap">
             <button
               type="button"
               onClick={() => setIsNewActivityModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00796B] hover:bg-teal-800 text-white font-bold text-xs rounded-lg shadow-2xs transition-all cursor-pointer hover:shadow-xs active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#00796B] hover:bg-teal-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer hover:shadow-md active:scale-95"
               title="Buka lembaran baru untuk menginput kegiatan pelatihan lainnya"
             >
-              <FilePlus2 className="w-3.5 h-3.5 text-emerald-200" />
+              <FilePlus2 className="w-4 h-4 text-emerald-200" />
               <span>+ Lembaran Baru</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsActivityManagerOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg border border-slate-300 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs sm:text-sm rounded-xl border border-slate-300 transition-colors cursor-pointer"
               title="Lihat riwayat / daftar kegiatan pelatihan yang sudah tersimpan"
             >
-              <Layers className="w-3.5 h-3.5 text-teal-700" />
+              <Layers className="w-4 h-4 text-teal-700" />
               <span>Daftar Kegiatan ({activities.length})</span>
             </button>
           </div>
@@ -1254,6 +1305,7 @@ export default function App() {
       <TrainingFolderModal
         isOpen={isTrainingFolderOpen}
         onClose={() => setIsTrainingFolderOpen(false)}
+        training={training}
         activities={activities}
         activeActivityId={activeActivityId}
         onSelectActivity={handleSelectActivity}
